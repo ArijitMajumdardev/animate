@@ -1,9 +1,20 @@
-import { ArrowUp, ArrowUpRight} from "lucide-react";
-import Image from "next/image";
+"use client";
+import { ArrowUpRight } from "lucide-react";
+import { useRouter } from "next/navigation";
+
+import { useState } from "react";
 
 export default function Home() {
+  const router = useRouter();
+  const [prompt, setPrompt] = useState("");
+
+  const handleSubmit = () => {
+    if (!prompt.trim()) return;
+    router.push(`/generate?prompt=${encodeURIComponent(prompt)}`);
+  };
+
   return (
-    <main className="min-h-screen relative flex items-center justify-center">
+    <main className="min-h-[88vh] relative flex items-center justify-center">
       <div
         className="absolute inset-0 z-0"
         style={{
@@ -22,17 +33,21 @@ export default function Home() {
           Describe your animation in plain English and let AI + Manim turn it
           into a video. Perfect for math educators, students, and curious minds.
         </p>
-<div className="group bg-[#111112] border border-gray-600 rounded-lg w-full min-h-[150px] p-2 relative ">
-  <textarea
+        <div className="group bg-[#111112] border border-gray-600 rounded-lg w-full min-h-[150px] p-2 relative ">
+          <textarea
             className="w-full min-h-[100px] p-4 resize-none outline-none bg-transparent text-white placeholder:text-gray-500"
             placeholder="Make a traingle moving from right to left ..."
-  />
-  <button className="absolute right-4 bottom-4 size-8 flex items-center justify-center rounded-2xl transition
-    bg-gray-600 text-gray-700 group-focus-within:bg-white group-focus-within:text-black">
-    <ArrowUpRight /> 
-  </button>
-</div>
-
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+          />
+          <button
+            className="absolute right-4 bottom-4 size-8 flex items-center justify-center rounded-2xl transition
+    bg-gray-600 text-gray-700 group-focus-within:bg-white group-focus-within:text-black"
+            onClick={handleSubmit}
+          >
+            <ArrowUpRight />
+          </button>
+        </div>
       </div>
     </main>
   );
