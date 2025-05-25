@@ -1,0 +1,26 @@
+# .render.yaml (at the root of your repository)
+services:
+  - type: web
+    name: animate-server
+    env: python
+    # Important:  Change to the server directory before installing dependencies
+    buildCommand: |
+      cd server
+      pip install uv
+      uv pip install -r requirements.txt
+    # Important:  Change to the server directory before starting the app
+    startCommand: |
+      cd server
+      uvicorn src.main:app --host 0.0.0.0 --port $PORT
+    numInstances: 1
+    plan: free
+    region: singapore
+    envVars:
+      - key: DATABASE_URL
+      - key: SECRET_KEY
+      - key: ALGORITHM
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+      - key: GEMINI_API_KEY
+      - key: SUPABASE_URL
+      - key: SUPABASE_KEY
+      # ... other environment variables
