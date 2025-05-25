@@ -18,9 +18,7 @@ export default function GeneratePage() {
   const [copyClicked, setCopyClicked] = useState(false);
   const [downloadClicked, setDownloadClicked] = useState(false);
 
-  const token = localStorage.getItem('token')
-
-
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
     const generate = async () => {
@@ -37,14 +35,17 @@ export default function GeneratePage() {
       setVideoUrl("");
 
       try {
-        const res = await fetch("http://localhost:8000/generate", {
-          method: "POST",
-          body: JSON.stringify({ prompt }),
-          headers: {
-            "Content-Type": "application/json",
-            'Authorization': `Bearer ${token}`,
-          },
-        });
+        const res = await fetch(
+          process.env.NEXT_PUBLIC_BASE_API + "/generate",
+          {
+            method: "POST",
+            body: JSON.stringify({ prompt }),
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         if (!res.ok) {
           const errorData = await res.json();
@@ -152,13 +153,26 @@ export default function GeneratePage() {
                     className={`${className} whitespace-pre-wrap break-words text-sm text-gray-300 p-4 max-h-96 overflow-auto`}
                     style={style}
                   >
-                    {tokens.map((line, i) => (
-                      <div key={i} {...getLineProps({ line, key: i })}>
-                        {line.map((token, key) => (
-                          <span key={key} {...getTokenProps({ token, key })} />
-                        ))}
-                      </div>
-                    ))}
+                    {tokens.map((line, i) => {
+                      const { key, ...restLineProps } = getLineProps({
+                        line,
+                        key: i,
+                      });
+                      return (
+                        <div key={key as React.Key} {...restLineProps}>
+                          {line.map((token, index) => {
+                            const { key: tokenKey, ...tokenProps } =
+                              getTokenProps({ token, key: index });
+                            return (
+                              <span
+                                key={tokenKey as React.Key}
+                                {...tokenProps}
+                              />
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
                   </pre>
                 )}
               </Highlight>
