@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const storedToken = localStorage.getItem("token");
     if (storedUser && storedToken) {
       try {
-        const response = await fetch("http://127.0.0.1:8000/valid_token", {
+        const response = await fetch(process.env.NEXT_PUBLIC_BASE_API+"/valid_token", {
           headers: {
             Authorization: `Bearer ${storedToken}`,
           },
