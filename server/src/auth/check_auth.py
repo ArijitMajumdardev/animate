@@ -20,13 +20,13 @@ def get_current_user(token: str = Depends(oauth2_scheme),db: Session = Depends(g
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_email: int = payload.get("user_email")
+        user_email: str = payload.get("user_email")
         if user_email is None:
             raise credentials_exception
         # getting info from DB here using user_email
         db_user = crud.get_user_by_email(db, user_email)
         if not db_user:
-            raise HTTPException(status_code=400, detail="Invalid credentials")
+            raise credentials_exception
 
     except JWTError:
         raise credentials_exception
