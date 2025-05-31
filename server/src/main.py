@@ -5,14 +5,14 @@ from src.database import Base, engine
 from dotenv import load_dotenv
 from .auth.check_auth import get_current_user
 from .schemas import PromptInput
-from .llm import call_gemini_api
+from .llm import call_gemini_api,call_gemini_api_with_voice
 from .utils import (
     extract_code_from_response, save_and_render_manim,
     upload_to_supabase, cleanup_temp, clean_llm_response
 )
 import json
 import re
-
+import httpx
 load_dotenv()
 
 Base.metadata.create_all(bind=engine)
@@ -46,33 +46,68 @@ async def protected_route(current_user: dict = Depends(get_current_user)):
         }
     }
 
+# ,current_user: dict = Depends(get_current_user)
 
 @app.post("/generate")
-def generate(input: PromptInput,current_user: dict = Depends(get_current_user)):
+async def generate(input: PromptInput):
     try:
         # 1. Call Gemini
-        llm_response = call_gemini_api(input.prompt)
-        llm_response = clean_llm_response(llm_response)
-        print("this is the llm response : \n", llm_response)
+        if input.voice_over=="TRUE":
+            llm_response = call_gemini_api_with_voice(input.prompt)
+            llm_response = llm_response["response"]
+            script = llm_response["script"]
+        else:
+            llm_response = call_gemini_api(input.prompt)
+            llm_response = llm_response["response"]
         # 2. Extract Manim code
-        manim_code = extract_code_from_response(llm_response["response"])
 
-        # # 3. Render video
-        rendered = save_and_render_manim(manim_code)
-        video_path = rendered["video_path"]
-        file_id = rendered["file_id"]
+        manim_code = llm_response["code"]
 
-        # # 4. Upload to Supabase
-        video_url = upload_to_supabase(video_path, file_id)
+        if input.voice_over == "TRUE":
+            # 2. Send code to remote Manim server
+            try:
+                async with httpx.AsyncClient() as client:
+                    response = await client.post(
+                        "http://127.0.0.1:8001/manim-worker/render",
+                        json={"code": manim_code},
+                        timeout=60
+                    )
+                response.raise_for_status()
+                video_url = response.json()["video_url"]
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"Render server error: {str(e)}")
 
-        # # 5. Clean up
-        cleanup_temp()
 
-        # 6. Return
-        return {
-            "llm_response": llm_response,
-            "video_url": video_url,
-        }
+            # 6. Return
+            return {
+                "llm_response": llm_response,
+                "video_url": video_url,
+            }
+        
+        else:
+            # 2. Send code and script to remote Manim server
+            try:
+                async with httpx.AsyncClient() as client:
+                    response = await client.post(
+                        "http://127.0.0.1:8001/manim-worker/render",
+                        json={"code": manim_code,"script":script},
+                        timeout=60
+                    )
+                response.raise_for_status()
+                video_url = response.json()["video_url"]
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"Render server error: {str(e)}")
+
+
+            # 6. Return
+            return {
+                "llm_response": llm_response,
+                "video_url": video_url,
+            }
+
+
+
+
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

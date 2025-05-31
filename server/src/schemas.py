@@ -29,3 +29,4 @@ class Token(BaseModel):
 
 class PromptInput(BaseModel):
     prompt: str
+    voice_over: str = "FALSE"
