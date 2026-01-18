@@ -37,7 +37,7 @@ def get_supabase() -> Client:
 # -----------------------------
 
 def clean_llm_response(llm_response: str) -> dict:
-    """Cleans ```json blocks and parses JSON safely"""
+    # """Cleans ```json blocks and parses JSON safely"""
     cleaned = re.sub(r"```json|```", "", llm_response).strip()
 
     try:
@@ -47,7 +47,7 @@ def clean_llm_response(llm_response: str) -> dict:
 
 
 def extract_code_from_response(text: str) -> str:
-    """Extracts Manim code after 'CODE:' marker"""
+    # """Extracts Manim code after 'CODE:' marker"""
     match = re.search(r"CODE:\s*\n(.+)", text, re.DOTALL)
 
     if not match:
@@ -61,10 +61,10 @@ def extract_code_from_response(text: str) -> str:
 # -----------------------------
 
 def save_and_render_manim(code: str) -> dict:
-    """
-    Saves code to a temp file, runs Manim, returns video path + file_id
-    Each job runs in its own isolated directory.
-    """
+    # """
+    # Saves code to a temp file, runs Manim, returns video path + file_id
+    # Each job runs in its own isolated directory.
+    # """
     file_id = str(uuid.uuid4())
 
     base_dir = Path("jobs") / file_id
@@ -131,8 +131,8 @@ def upload_to_supabase(video_path: str, file_id: str) -> str:
 # Cleanup job folder
 # -----------------------------
 
-def cleanup_job(file_id: str):
-    """Deletes only the job folder instead of global folders"""
+def cleanup_temp(file_id: str):
+    # """Deletes only the job folder instead of global folders"""
     job_path = Path("jobs") / file_id
 
     try:
